@@ -48,7 +48,7 @@ By the end of this activity, students will be able to:
 
 | File | Description |
 |------|-------------|
-| `Crayon_Commotion_Instructions.pdf` | Full facilitator setup and implementation guide |
+| `Crayon_Commotion_Instructions.docx` | Full facilitator setup and implementation guide |
 | *(image-specific files)* | Mini-pages, color tables, color maps, and data sheets are generated per image — see setup instructions |
 
 > **Note:** The image-specific files (mini-pages, color tables, etc.) are generated using a Python workflow described in the setup instructions. The repo includes the tools needed to generate these for any image you choose.
