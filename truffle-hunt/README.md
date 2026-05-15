@@ -48,6 +48,7 @@ By the end of this assignment, students will be able to:
 |------|-------------|
 | `index.html` | The Truffle Hunt game — open in any web browser, no installation needed |
 | `TruffleHunt_instructions.pdf` | Student-facing assignment instructions |
+| `ai-comparison.pdf` | Student-facing document/infographic comparing rules-based AI to large language models like ChatGPT. Note: This infographic was generated entirely by an LLM. |
 
 ---
 
