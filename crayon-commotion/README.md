@@ -46,24 +46,47 @@ By the end of this activity, students will be able to:
 
 ## Files in This Folder
 
-| File | Description |
+| File / Folder | Description |
 |------|-------------|
-| `Crayon Commotion Instructions.docx` | Full facilitator setup and implementation guide, including how to generate image-specific files |
-| *(image-specific files)* | Mini-pages, color tables, color maps, and data sheets are generated per image — see setup instructions |
+| `Crayon Commotion Instructions.docx` | Original facilitator background and activity design notes |
+| `generate_materials.ipynb` | Colab notebook — the easiest way to turn your own image into printable materials, no install required (see below) |
+| `src/commotion/` | The Python package behind the notebook — image resizing, color quantization, and PDF generation. Written to be readable, not just runnable; browsable if you want to see how any step actually works |
+| `palettes/crayola24.csv` | The default 24-color Crayola palette, as a plain `id,name,r,g,b` table |
+| `images/` | Example source images used while building this tool |
+| `output/` | Where generated PDFs/CSVs land when you run the tool locally |
 
-> **Note:** The image-specific files (mini-pages, color tables, etc.) are generated using a Python workflow described in the setup instructions document.
+---
+
+## Generating Materials for a New Image
+
+**Recommended: use the notebook, no installation needed.**
+
+1. Open [`generate_materials.ipynb`](generate_materials.ipynb) in Colab: **[Open in Colab](https://colab.research.google.com/github/Ready-Remix-Run/2026/blob/main/crayon-commotion/generate_materials.ipynb)**
+   *(link assumes this activity lives at `crayon-commotion/` inside the `Ready-Remix-Run/2026` repo, on the `main` branch — if the path ends up different, swap that part of the URL)*
+2. Upload your image when prompted.
+3. Choose your block size (how many pixels wide × tall each student's mini-page covers) and pick a palette.
+4. Run the notebook. It downloads a zip containing:
+   - A blank student sheet template, ready to print and duplicate
+   - Encoding instructions for every mini-page (which numbers go where)
+   - A large-format color reference chart, sized to hang on a wall
+   - A teacher's cheat sheet showing the correct color for every square
+5. Print, cut mini-pages along the top and left edges only, and you're ready — see *How to Teach It* below.
+
+**For CS teachers who want to see or run the code directly:** the notebook is a thin wrapper around the `src/commotion/` package — nothing in it is hidden or notebook-only. To run it locally instead: `pip install -r requirements.txt`, then see `src/commotion/cli.py`, which walks through every pipeline step (image loading, resizing, color matching, splitting into mini-pages, PDF generation) against the sample images in `images/`.
+
+Each printed mini-page cell is 1 cm square by default (0.5 cm on the teacher's cheat sheet, to keep color-printing costs down); both are configurable in the notebook.
 
 ---
 
 ## How to Teach It
 
 ### Before Class (Allow extra lead time — setup is involved)
-- Select your image and generate the mini-pages, color table, color map, and data sheet using the provided tools
-- Print mini-pages and verify cell size is approximately 0.75"–0.80" per square (use print scaling if needed); there are 6 mini-page grids per printed page
-- Cut out mini-pages along the top and left edges only — leave the bottom and right margins intact, as they serve as guides for alignment and carry the page labels (e.g., A-1)
-- Draw a labeled grid on the easel pad matching the mini-page dimensions: 8 columns (A–H) × 12 rows (1–12) = 96 mini-pages total
-- Sort crayons into numbered bags or containers matching the color table
-- Print the color table for prominent display; print the color map and data sheet as facilitator-only cheat sheets
+- Generate your materials from *Generating Materials for a New Image* above: a blank student sheet, per-mini-page encoding instructions, a wall-sized color reference chart, and a teacher's cheat sheet
+- Print blank student sheets and encoding instructions — each prints as many mini-page grids as comfortably fit per page (1 cm per square by default), so page count depends on your block size and image
+- Cut out mini-pages along the top and left edges only — leave the bottom and right margins intact, as they serve as guides for alignment and carry the mini-page's position label (e.g., A-1)
+- Draw a labeled grid on the easel pad matching the mini-page dimensions and the layout your generated materials use
+- Sort crayons into numbered bags or containers matching the color reference chart
+- Print the color reference chart for prominent display; print the teacher's cheat sheet as your facilitator-only answer key
 - Optional: prepare a few blank mini-pages as replacements in case of coloring errors
 
 ### In Class

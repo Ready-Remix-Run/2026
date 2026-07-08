@@ -1,0 +1,25 @@
+id,name,r,g,b
+0,White,255,255,255
+1,Red,238,32,77
+2,Scarlet,253,14,53
+3,Red-Orange,255,63,52
+4,Orange,255,136,51
+5,Yellow-Orange,255,174,66
+6,Dandelion,254,216,93
+7,Yellow,251,232,112
+8,Green-Yellow,241,231,136
+9,Yellow-Green,197,225,122
+10,Green,1,163,104
+11,Blue-Green,0,149,183
+12,Cerulean,2,164,211
+13,Blue,0,102,255
+14,Indigo,79,105,198
+15,Blue-Violet,100,86,183
+16,Violet,131,89,163
+17,Red-Violet,187,51,133
+18,Carnation Pink,255,166,201
+19,Violet-Red,247,70,138
+20,Brown,175,89,62
+21,Apricot,253,213,177
+22,Black,0,0,0
+23,Gray,139,134,128
