@@ -12,6 +12,8 @@ from commotion.imaging.resize import load_and_resize_image
 from commotion.imaging.quantize import quantize_image
 from commotion.imaging.variety import count_monochrome_blocks, ensure_block_variety
 from commotion.encoders.decimal import DecimalEncoder
+from commotion.encoders.binary import BinaryEncoder, bits_needed_for_palette
+from commotion.encoders.encoder import Encoder
 from commotion.encoders.grid import encode_grid
 from commotion.worksheets.builder import build_worksheet
 from commotion.worksheets.splitter import split_into_student_sheets
@@ -89,6 +91,17 @@ def test_encode(grid):
     section("Encode")
 
     encoded = encode_grid(grid, DecimalEncoder())
+    print(f"Top-left cell encoded value: '{encoded[0][0].value}'")
+
+    return encoded
+
+
+def test_encode_binary(grid, palette: Palette):
+    section("Encode (binary)")
+
+    bit_width = bits_needed_for_palette(palette)
+    encoded = encode_grid(grid, BinaryEncoder(bit_width))
+    print(f"Palette has {len(palette.colors)} colors -> {bit_width}-bit binary values")
     print(f"Top-left cell encoded value: '{encoded[0][0].value}'")
 
     return encoded
@@ -176,14 +189,28 @@ def test_csv(worksheet: Worksheet) -> Path:
     return out_path
 
 
+def build_encoder(encoder_name: str, palette: Palette) -> Encoder:
+    if encoder_name == "Decimal":
+        return DecimalEncoder()
+    if encoder_name == "Binary":
+        return BinaryEncoder(bits_needed_for_palette(palette))
+    raise ValueError(f"Unknown encoder: {encoder_name!r}")
+
+
 def test_csta_worksheet(
     palette: Palette,
     ensure_variety: bool = False,
+    encoder_name: str = "Binary",
 ) -> tuple[Worksheet, list[StudentSheet], DimensionOption]:
     """
     Build the full 1-pixel-per-cell worksheet for csta2027.png and split it
     into 6 (wide) x 4 (tall) pixel blocks -- no resizing needed since the
     source image already divides evenly.
+
+    Defaults to binary encoding: CS teacher participants decode binary to
+    decimal first, then look up the color on the (decimal-keyed) reference
+    chart. Pass encoder_name="Decimal" for a simpler, elementary-friendly
+    version that skips the binary-to-decimal step entirely.
     """
     section("CSTA image: worksheet + blocks")
 
@@ -209,14 +236,16 @@ def test_csta_worksheet(
         mono_after, _ = count_monochrome_blocks(grid, block_rows, block_cols)
         print(f"Monochrome blocks after variety pass:  {mono_after}/{total_blocks}")
 
-    encoded = encode_grid(grid, DecimalEncoder())
+    encoder = build_encoder(encoder_name, palette)
+    encoded = encode_grid(grid, encoder)
     worksheet = build_worksheet(
         title="CSTA 2027",
         cells=encoded,
-        encoder_name="Decimal",
+        encoder_name=encoder_name,
         palette_name=palette.name,
     )
     print(f"Worksheet: {worksheet.rows} x {worksheet.cols} (1 cell per pixel, no resize needed)")
+    print(f"Encoding: {encoder_name} (e.g. top-left cell = '{encoded[0][0].value}')")
 
     sheet_size = DimensionOption(rows=block_rows, cols=block_cols)
     sheets = split_into_student_sheets(worksheet, sheet_size)
@@ -278,6 +307,7 @@ def main():
     pixels = test_image(dims)
     grid = test_quantize(pixels, palette)
     encoded = test_encode(grid)
+    test_encode_binary(grid, palette)
     worksheet = test_worksheet(encoded, palette)
 
     sheet_size = test_sheet_size(worksheet, plan.cells_per_sheet)

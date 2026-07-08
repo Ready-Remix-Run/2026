@@ -64,7 +64,7 @@ By the end of this activity, students will be able to:
 1. Open [`generate_materials.ipynb`](generate_materials.ipynb) in Colab: **[Open in Colab](https://colab.research.google.com/github/Ready-Remix-Run/2026/blob/main/crayon-commotion/generate_materials.ipynb)**
    *(link assumes this activity lives at `crayon-commotion/` inside the `Ready-Remix-Run/2026` repo, on the `main` branch — if the path ends up different, swap that part of the URL)*
 2. Upload your image when prompted.
-3. Choose your block size (how many pixels wide × tall each student's mini-page covers) and pick a palette.
+3. Choose your block size (how many pixels wide × tall each student's mini-page covers) and an encoding: **Decimal** (a plain number per square — simpler, works for any age) or **Binary** (a fixed-width binary number — participants decode it to decimal first, then use the color reference chart, which stays decimal either way). Binary is a better fit for CS-teacher audiences who can handle the extra decoding step.
 4. Run the notebook. It downloads a zip containing:
    - A blank student sheet template, ready to print and duplicate
    - Encoding instructions for every mini-page (which numbers go where)
