@@ -10,11 +10,11 @@
 
 | | |
 |---|---|
-| **Author** | Jeffrey L. Popyack, Drexel University |
+| **Authors** | Jeffrey L. Popyack, Drexel University revised by Tammy Pirmann, Drexel University |
 | **Assignment Type** | Unplugged / hands-on group activity |
 | **CS Concepts** | Digital image representation, color tables, data encoding, GIF format, pixels |
-| **Grade Band** | Elementary · Middle school · High school |
-| **Time Required** | 1 class period (50–60 min) |
+| **Grade Band** | Elementary · Middle school · High school · Community event|
+| **Time Required** | 1 class period (50–60 min) depending on image size |
 | **Prerequisites** | None — accessible to any age group |
 | **Materials** | Easel pad (25" × 30"), crayons, printed mini-pages, tape |
 
