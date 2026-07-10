@@ -16,7 +16,7 @@
 | **Grade Band** | Elementary · Middle school · High school |
 | **Time Required** | 1 class period (50–60 min) |
 | **Prerequisites** | None — accessible to any age group |
-| **Materials** | Easel pad (25" × 30"), crayons, printed mini-pages, tape or paper clips |
+| **Materials** | Easel pad (25" × 30"), crayons, printed mini-pages, tape |
 
 ---
 
@@ -24,11 +24,11 @@
 
 Students collaboratively recreate a pixelated image using crayons and a number-based color system — without knowing what the final picture will be until the very end.
 
-Each student receives one or more "mini-pages": small 4×3 grids filled with numbers. A posted color table tells them which crayon color corresponds to each number. Students color in their grids and attach the completed mini-pages to a large easel in their assigned positions. As the mini-pages accumulate, a pixel-art image gradually emerges — and the big reveal never gets old.
+Each student receives one or more "mini-pages": small grids filled with numbers. A posted color table tells them which crayon color corresponds to each number. Students color in their grids and attach the completed mini-pages to a large easel in their assigned positions. As the mini-pages accumulate, a pixel-art image gradually emerges — and the big reveal never gets old.
 
 The activity makes visceral and memorable something that is otherwise purely abstract: the idea that every image on a computer is simply a table of numbers. No binary required. No devices required. Just crayons, paper, and a room full of people working together toward something they can't quite see yet.
 
-The activity scales beautifully — from a kindergarten classroom focusing purely on the "numbers become pictures" idea, to a high school CS class connecting the activity to GIF encoding, color depth, and compression tradeoffs.
+The activity scales beautifully — from an elementary classroom focusing purely on the "numbers become pictures" idea, to a high school CS class connecting the activity to GIF encoding, color depth, and compression tradeoffs.
 
 ---
 
@@ -39,7 +39,7 @@ By the end of this activity, students will be able to:
 - Explain that digital images are stored as tables of numbers
 - Describe how a color table maps numbers to colors
 - Define what a pixel is and how pixels combine to form an image
-- Connect the activity to real file formats (GIF and beyond)
+- Connect the activity to real file formats (BMP, PNG and beyond)
 - Appreciate why standardized encoding matters for sharing data across systems
 
 ---
@@ -62,7 +62,7 @@ By the end of this activity, students will be able to:
 **Recommended: use the notebook, no installation needed.**
 
 1. Open [`generate_materials.ipynb`](generate_materials.ipynb) in Colab: **[Open in Colab](https://colab.research.google.com/github/Ready-Remix-Run/2026/blob/main/crayon-commotion/generate_materials.ipynb)**
-   *(link assumes this activity lives at `crayon-commotion/` inside the `Ready-Remix-Run/2026` repo, on the `main` branch — if the path ends up different, swap that part of the URL)*
+   
 2. Upload your image when prompted.
 3. Choose your block size (how many pixels wide × tall each student's mini-page covers) and an encoding: **Decimal** (a plain number per square — simpler, works for any age) or **Binary** (a fixed-width binary number — participants decode it to decimal first, then use the color reference chart, which stays decimal either way). Binary is a better fit for CS-teacher audiences who can handle the extra decoding step.
 4. Run the notebook. It downloads a zip containing:
@@ -92,7 +92,7 @@ Each printed mini-page cell is 1 cm square by default (0.5 cm on the teacher's c
 ### In Class
 1. **Introduce the concept** (5–10 min) — Explain that all information on a computer, including images, is stored as numbers. Today's activity shows exactly how that works for images. Introduce the color table and the mini-page format.
 2. **Distribute mini-pages and get coloring** (25–30 min) — Hand out mini-pages. Students find their assigned colors using the color table and fill in each cell. As they finish, they attach their mini-pages to the easel in the labeled position.
-3. **The reveal** (5 min) — Step back and let students see the completed image emerge. This moment lands every time.
+3. **The reveal** (5 min) — Step back and let students see the completed image emerge. Students generally enjoy and celebrate at this point.
 4. **Debrief** (10–15 min) — See discussion questions below.
 
 ### Discussion Questions
@@ -125,7 +125,7 @@ Each printed mini-page cell is 1 cm square by default (0.5 cm on the teacher's c
 
 ### Running It with Large Groups (Conferences, Assemblies)
 - This activity was designed with large group settings in mind and works beautifully at events
-- Assign mini-pages to small teams rather than individuals
+- Assign mini-pages to small teams or individuals
 - Have a few facilitators circulating to catch coloring errors early (use the cheat sheet)
 - Consider running two images simultaneously — but note that color table numbering may differ between images, so use clearly distinct crayon sets for each
 
@@ -144,6 +144,7 @@ Each printed mini-page cell is 1 cm square by default (0.5 cm on the teacher's c
 
 ## Credits & License
 
-Created by **Jeffrey L. Popyack**, Drexel University (popyack@drexel.edu).
+Original activity Created by **Jeffrey L. Popyack**, Drexel University (popyack@drexel.edu) as Post It Pandmonium.
+This software enabled activity created by **Tammy Pirmann**, Drexel University (tammy.r.pirmann@drexel.edu).
 
-Shared under [Creative Commons Attribution 4.0 (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/). You are free to use, adapt, and share this assignment — please credit the original author.
+Shared under [Creative Commons Attribution 4.0 (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/). You are free to use, adapt, and share this assignment — please credit the original authors.
