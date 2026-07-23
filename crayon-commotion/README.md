@@ -63,7 +63,6 @@ By the end of this activity, students will be able to:
 **Recommended: use the notebook, no installation needed.**
 
 1. Open [`generate_materials.ipynb`](generate_materials.ipynb) in Colab: **[Open in Colab](https://colab.research.google.com/github/Ready-Remix-Run/2026/blob/main/crayon-commotion/generate_materials.ipynb)**
-   
 2. Upload your image when prompted.
 3. Choose a palette (**Crayola 24** for more color accuracy, or **Crayola 16** if that's the box you have), your block size (how many pixels wide × tall each student's mini-page covers), and an encoding:
    - **Decimal** — a plain number per square (e.g. `18`). Simplest, works for any age.
