@@ -13,6 +13,8 @@ from commotion.imaging.quantize import quantize_image
 from commotion.imaging.variety import count_monochrome_blocks, ensure_block_variety
 from commotion.encoders.decimal import DecimalEncoder
 from commotion.encoders.binary import BinaryEncoder, bits_needed_for_palette
+from commotion.encoders.rgb_binary import RGBBinaryEncoder
+from commotion.encoders.hexadecimal import RGBHexEncoder
 from commotion.encoders.encoder import Encoder
 from commotion.encoders.grid import encode_grid
 from commotion.worksheets.builder import build_worksheet
@@ -27,6 +29,7 @@ from commotion.renderers.pdf import (
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 PALETTE_PATH = PROJECT_ROOT / "palettes" / "crayola24.csv"
+PALETTE_16_PATH = PROJECT_ROOT / "palettes" / "crayola16.csv"
 IMAGE_PATH = PROJECT_ROOT / "images" / "test_image.png"
 CSTA_IMAGE_PATH = PROJECT_ROOT / "images" / "csta2027.png"
 OUTPUT_DIR = PROJECT_ROOT / "output"
@@ -44,6 +47,17 @@ def test_palette() -> Palette:
     for color in palette.colors[:3]:
         print(f"  {color.id}: {color.name} rgb({color.r}, {color.g}, {color.b})")
     print("  ...")
+
+    return palette
+
+
+def test_palette_16() -> Palette:
+    section("Palette (Crayola 16)")
+
+    palette = load_palette(PALETTE_16_PATH, palette_name="Crayola 16")
+    print(f"Loaded '{palette.name}' with {len(palette.colors)} colors -> {bits_needed_for_palette(palette)}-bit binary")
+    for color in palette.colors:
+        print(f"  {color.id}: {color.name} rgb({color.r}, {color.g}, {color.b})")
 
     return palette
 
@@ -194,7 +208,23 @@ def build_encoder(encoder_name: str, palette: Palette) -> Encoder:
         return DecimalEncoder()
     if encoder_name == "Binary":
         return BinaryEncoder(bits_needed_for_palette(palette))
+    if encoder_name == "RGB Binary":
+        return RGBBinaryEncoder()
+    if encoder_name == "RGB Hex":
+        return RGBHexEncoder()
     raise ValueError(f"Unknown encoder: {encoder_name!r}")
+
+
+def reference_label_fn(encoder_name: str):
+    """
+    RGBBinaryEncoder/RGBHexEncoder don't use palette ids, so their
+    reference chart has to show RGB decimal values instead (e.g.
+    "255,255,255") -- everything else still looks up a palette id, so it
+    keeps the id label.
+    """
+    if encoder_name in ("RGB Binary", "RGB Hex"):
+        return lambda color: f"{color.r},{color.g},{color.b}"
+    return lambda color: str(color.id)
 
 
 def test_csta_worksheet(
@@ -276,23 +306,27 @@ def test_encoding_sheets(sheets: list[StudentSheet]) -> Path:
     return out_path
 
 
-def test_reference_sheet(palette: Palette) -> Path:
+def test_reference_sheet(palette: Palette, encoder_name: str = "Decimal") -> Path:
     section("PDF: reference chart")
 
     OUTPUT_DIR.mkdir(exist_ok=True)
     out_path = OUTPUT_DIR / "reference_sheet.pdf"
-    render_reference_sheet(palette, out_path)
+    render_reference_sheet(palette, out_path, label_fn=reference_label_fn(encoder_name))
     print(f"Wrote {out_path}")
 
     return out_path
 
 
-def test_cheat_sheet(worksheet: Worksheet, cell_size_cm: float = 0.5) -> Path:
+def test_cheat_sheet(worksheet: Worksheet, sheet_size: DimensionOption, cell_size_cm: float = 0.5) -> Path:
     section("PDF: teacher cheat sheet")
 
     OUTPUT_DIR.mkdir(exist_ok=True)
     out_path = OUTPUT_DIR / "cheat_sheet.pdf"
-    pages = render_cheat_sheet(worksheet, out_path, cell_size_cm=cell_size_cm)
+    pages = render_cheat_sheet(
+        worksheet, out_path,
+        block_rows=sheet_size.rows, block_cols=sheet_size.cols,
+        cell_size_cm=cell_size_cm,
+    )
     print(f"Wrote {out_path} ({pages} pages, {cell_size_cm:g} cm cells)")
 
     return out_path
@@ -300,6 +334,7 @@ def test_cheat_sheet(worksheet: Worksheet, cell_size_cm: float = 0.5) -> Path:
 
 def main():
     palette = test_palette()
+    test_palette_16()
 
     plan = ClassroomPlan(students=24, sheets_per_student=2, cells_per_sheet=10)
     dims = test_dimensions(plan)
@@ -315,11 +350,14 @@ def main():
 
     test_csv(worksheet)
 
-    csta_worksheet, csta_sheets, csta_sheet_size = test_csta_worksheet(palette, ensure_variety=True)
+    csta_encoder_name = "RGB Hex"
+    csta_worksheet, csta_sheets, csta_sheet_size = test_csta_worksheet(
+        palette, ensure_variety=True, encoder_name=csta_encoder_name,
+    )
     test_blank_sheet(csta_sheet_size)
     test_encoding_sheets(csta_sheets)
-    test_reference_sheet(palette)
-    test_cheat_sheet(csta_worksheet)
+    test_reference_sheet(palette, encoder_name=csta_encoder_name)
+    test_cheat_sheet(csta_worksheet, csta_sheet_size)
 
 
 if __name__ == "__main__":

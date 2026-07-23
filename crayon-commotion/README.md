@@ -52,6 +52,7 @@ By the end of this activity, students will be able to:
 | `generate_materials.ipynb` | Colab notebook — the easiest way to turn your own image into printable materials, no install required (see below) |
 | `src/commotion/` | The Python package behind the notebook — image resizing, color quantization, and PDF generation. Written to be readable, not just runnable; browsable if you want to see how any step actually works |
 | `palettes/crayola24.csv` | The default 24-color Crayola palette, as a plain `id,name,r,g,b` table |
+| `palettes/crayola16.csv` | The standard 16-color Crayola box, for classrooms using the smaller pack |
 | `images/` | Example source images used while building this tool |
 | `output/` | Where generated PDFs/CSVs land when you run the tool locally |
 
@@ -64,7 +65,11 @@ By the end of this activity, students will be able to:
 1. Open [`generate_materials.ipynb`](generate_materials.ipynb) in Colab: **[Open in Colab](https://colab.research.google.com/github/Ready-Remix-Run/2026/blob/main/crayon-commotion/generate_materials.ipynb)**
    *(link assumes this activity lives at `crayon-commotion/` inside the `Ready-Remix-Run/2026` repo, on the `main` branch — if the path ends up different, swap that part of the URL)*
 2. Upload your image when prompted.
-3. Choose your block size (how many pixels wide × tall each student's mini-page covers) and an encoding: **Decimal** (a plain number per square — simpler, works for any age) or **Binary** (a fixed-width binary number — participants decode it to decimal first, then use the color reference chart, which stays decimal either way). Binary is a better fit for CS-teacher audiences who can handle the extra decoding step.
+3. Choose a palette (**Crayola 24** for more color accuracy, or **Crayola 16** if that's the box you have), your block size (how many pixels wide × tall each student's mini-page covers), and an encoding:
+   - **Decimal** — a plain number per square (e.g. `18`). Simplest, works for any age.
+   - **Binary** — a fixed-width binary number (e.g. `10010`). Participants decode it to decimal, then use the color reference chart, which stays decimal-keyed either way.
+   - **RGB Binary** — three 8-bit binary numbers per square, one per red/green/blue component. Participants decode all three to a `R,G,B` decimal triple and match it directly on the reference chart, which switches to showing RGB values instead of palette ids. No lookup table involved — it's the actual color. The most advanced option, best for CS-teacher audiences.
+   - **RGB Hex** — the same idea as RGB Binary, but each component is a 2-digit hex byte (e.g. `FF`, `A2`, `00`) instead of 8 binary digits. Shorter and quicker to decode than RGB Binary while still being the actual color; the reference chart shows the same RGB decimal triples either way.
 4. Run the notebook. It downloads a zip containing:
    - A blank student sheet template, ready to print and duplicate
    - Encoding instructions for every mini-page (which numbers go where)

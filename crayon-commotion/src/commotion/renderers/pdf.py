@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
+from typing import Callable
 
 from reportlab.lib.pagesizes import letter, landscape
 from reportlab.lib.units import cm
 from reportlab.pdfgen.canvas import Canvas
 
-from commotion.models import Palette, StudentSheet, Worksheet
+from commotion.models import Palette, PaletteColor, StudentSheet, Worksheet
 
 MARGIN = 1.27 * cm  # 0.5"
 GUTTER = 1.0 * cm
@@ -34,6 +35,46 @@ def _text_color_for_background(r: int, g: int, b: int) -> tuple[float, float, fl
 def _fit_grid(usable: float, pitch: float) -> int:
     """How many repeats of `pitch` (including one trailing gutter) fit in `usable`."""
     return max(1, int((usable + GUTTER) // pitch))
+
+
+def _fit_font_size(
+    canvas: Canvas,
+    text: str,
+    font_name: str,
+    max_size: float,
+    max_width: float,
+    min_size: float = 4,
+) -> float:
+    """The largest font size (up to max_size) that fits `text` within max_width."""
+    size = max_size
+    while size > min_size and canvas.stringWidth(text, font_name, size) > max_width:
+        size -= 1
+    return size
+
+
+def _draw_grid_value(canvas: Canvas, x: float, y: float, cell: float, value: str, font_size: float = 8) -> None:
+    """
+    Draw a cell's encoded value, centered in the cell_size x cell_size box
+    whose bottom-left corner is (x, y). A value with embedded newlines
+    (e.g. one line per RGB component) is drawn as stacked rows instead of
+    a single line, with the font shrunk to fit all of them in the cell.
+    """
+    lines = value.split("\n")
+    cx = x + cell / 2
+    cy = y + cell / 2
+
+    if len(lines) == 1:
+        canvas.setFont("Helvetica", font_size)
+        canvas.drawCentredString(cx, cy - font_size * 0.35, lines[0])
+        return
+
+    line_height = cell / len(lines)
+    line_font_size = max(4, line_height * 0.55)
+    canvas.setFont("Helvetica", line_font_size)
+    top = cy + cell / 2 - line_height / 2
+    for i, line in enumerate(lines):
+        ly = top - i * line_height
+        canvas.drawCentredString(cx, ly - line_font_size * 0.35, line)
 
 
 def render_blank_block_sheet(
@@ -158,14 +199,14 @@ def render_encoding_sheets(
 
             canvas.setLineWidth(0.3)
             canvas.setStrokeColorRGB(0.6, 0.6, 0.6)
-            canvas.setFont("Helvetica", 8)
+            canvas.setFillColorRGB(0, 0, 0)
             for row in range(sheet.rows):
                 for col in range(sheet.cols):
                     x = block_left + col * cell
                     y = block_top - block_h + (sheet.rows - 1 - row) * cell
                     canvas.rect(x, y, cell, cell, stroke=1, fill=0)
                     value = sheet.cells[row * sheet.cols + col].value
-                    canvas.drawCentredString(x + cell / 2, y + cell / 2 - 3, value)
+                    _draw_grid_value(canvas, x, y, cell, value)
 
             canvas.setLineWidth(1.2)
             canvas.setStrokeColorRGB(0, 0, 0)
@@ -189,10 +230,16 @@ def render_reference_sheet(
     path: str | Path,
     page_size: tuple[float, float] = letter,
     title: str = "Color Reference Chart",
+    label_fn: Callable[[PaletteColor], str] = lambda color: str(color.id),
 ) -> None:
     """
     One page, single palette, swatches sized as large as will fit so the
     chart is readable from across a room.
+
+    label_fn controls what's printed on each swatch -- the default prints
+    the palette id (matching Decimal/Binary encoding), but e.g.
+    `lambda c: f"{c.r},{c.g},{c.b}"` matches RGBBinaryEncoder, which
+    doesn't use palette ids at all.
     """
     page_w, page_h = page_size
     usable_w = page_w - 2 * MARGIN
@@ -234,10 +281,15 @@ def render_reference_sheet(
         canvas.setLineWidth(1)
         canvas.rect(swatch_x, swatch_y, swatch_side, swatch_side, stroke=1, fill=1)
 
+        label = label_fn(color)
         text_r, text_g, text_b = _text_color_for_background(color.r, color.g, color.b)
         canvas.setFillColorRGB(text_r, text_g, text_b)
-        canvas.setFont("Helvetica-Bold", max(8, swatch_side * 0.55))
-        canvas.drawCentredString(swatch_x + swatch_side / 2, swatch_y + swatch_side * 0.3, str(color.id))
+        label_font_size = _fit_font_size(
+            canvas, label, "Helvetica-Bold",
+            max_size=max(8, swatch_side * 0.55), max_width=swatch_side * 0.85,
+        )
+        canvas.setFont("Helvetica-Bold", label_font_size)
+        canvas.drawCentredString(swatch_x + swatch_side / 2, swatch_y + swatch_side * 0.3, label)
 
         canvas.setFillColorRGB(0, 0, 0)
         canvas.setFont("Helvetica", max(6, swatch_side * 0.16))
@@ -249,19 +301,29 @@ def render_reference_sheet(
 def render_cheat_sheet(
     worksheet: Worksheet,
     path: str | Path,
+    block_rows: int,
+    block_cols: int,
     cell_size_cm: float = 1.0,
 ) -> int:
     """
     Tile the fully-colored worksheet across as many Letter pages as needed,
     auto-choosing portrait or landscape (whichever needs fewer pages).
+
+    Draws a bold line at every mini-page boundary and labels each one with
+    its position (e.g. "C7", matching the same labels used on the encoding
+    instructions), so a teacher who's told "block C7 is wrong" can find
+    that exact rectangle of pixels instead of counting cells by hand.
+
     Returns the number of pages written.
     """
     cell = cell_size_cm * cm
+    row_label_w = 1.0 * cm
+    col_label_h = 0.5 * cm
 
     def page_count(page_size: tuple[float, float]) -> tuple[int, int, int]:
         page_w, page_h = page_size
-        usable_w = page_w - 2 * MARGIN
-        usable_h = page_h - 2 * MARGIN - HEADER_HEIGHT
+        usable_w = page_w - 2 * MARGIN - row_label_w
+        usable_h = page_h - 2 * MARGIN - HEADER_HEIGHT - col_label_h
         cols_per_page = max(1, int(usable_w // cell))
         rows_per_page = max(1, int(usable_h // cell))
         pages_across = math.ceil(worksheet.cols / cols_per_page)
@@ -284,8 +346,10 @@ def render_cheat_sheet(
     pages_across = math.ceil(worksheet.cols / cols_per_page)
     pages_down = math.ceil(worksheet.rows / rows_per_page)
 
+    grid_left = MARGIN + row_label_w
+    top = page_h - MARGIN - HEADER_HEIGHT - col_label_h
+
     canvas = Canvas(str(path), pagesize=page_size)
-    top = page_h - MARGIN - HEADER_HEIGHT
 
     page_num = 0
     for page_row in range(pages_down):
@@ -297,6 +361,15 @@ def render_cheat_sheet(
             col_end = min(col_start + cols_per_page, worksheet.cols)
             page_num += 1
 
+            first_block_col = col_start // block_cols
+            last_block_col = (col_end - 1) // block_cols
+            first_block_row = row_start // block_rows
+            last_block_row = (row_end - 1) // block_rows
+            block_range = (
+                f"{_column_label(first_block_col)}{first_block_row + 1}-"
+                f"{_column_label(last_block_col)}{last_block_row + 1}"
+            )
+
             canvas.setFont("Helvetica-Bold", 14)
             canvas.setFillColorRGB(0, 0, 0)
             canvas.drawString(MARGIN, page_h - MARGIN - 0.35 * cm, f"Teacher Cheat Sheet - '{worksheet.title}'")
@@ -304,20 +377,56 @@ def render_cheat_sheet(
             canvas.drawString(
                 MARGIN, page_h - MARGIN - 0.9 * cm,
                 f"Page {page_num}/{total_pages}  (sheet row {page_row + 1}/{pages_down}, "
-                f"col {page_col + 1}/{pages_across})  rows {row_start}-{row_end - 1}, "
-                f"cols {col_start}-{col_end - 1}",
+                f"col {page_col + 1}/{pages_across})  blocks {block_range}  "
+                f"rows {row_start}-{row_end - 1}, cols {col_start}-{col_end - 1}",
             )
+
+            grid_w = (col_end - col_start) * cell
+            grid_h = (row_end - row_start) * cell
 
             canvas.setLineWidth(0.2)
             for row in range(row_start, row_end):
                 for col in range(col_start, col_end):
                     cell_obj = worksheet.cells[row][col]
                     color = cell_obj.color
-                    x = MARGIN + (col - col_start) * cell
+                    x = grid_left + (col - col_start) * cell
                     y = top - (row - row_start) * cell - cell
                     canvas.setFillColorRGB(color.r / 255, color.g / 255, color.b / 255)
                     canvas.setStrokeColorRGB(0.3, 0.3, 0.3)
                     canvas.rect(x, y, cell, cell, stroke=1, fill=1)
+
+            canvas.setLineWidth(1.2)
+            canvas.setStrokeColorRGB(0, 0, 0)
+            for boundary_col in range(0, worksheet.cols + 1, block_cols):
+                if col_start <= boundary_col <= col_end:
+                    x = grid_left + (boundary_col - col_start) * cell
+                    canvas.line(x, top - grid_h, x, top)
+            for boundary_row in range(0, worksheet.rows + 1, block_rows):
+                if row_start <= boundary_row <= row_end:
+                    y = top - (boundary_row - row_start) * cell
+                    canvas.line(grid_left, y, grid_left + grid_w, y)
+
+            canvas.setFont("Helvetica-Bold", 8)
+            canvas.setFillColorRGB(0, 0, 0)
+            for block_col_index in range(first_block_col, last_block_col + 1):
+                block_start = block_col_index * block_cols
+                block_end = min(block_start + block_cols, worksheet.cols)
+                visible_start = max(block_start, col_start)
+                visible_end = min(block_end, col_end)
+                if visible_end <= visible_start:
+                    continue
+                center_x = grid_left + ((visible_start - col_start) + (visible_end - col_start)) / 2 * cell
+                canvas.drawCentredString(center_x, top + 0.12 * cm, _column_label(block_col_index))
+
+            for block_row_index in range(first_block_row, last_block_row + 1):
+                block_start = block_row_index * block_rows
+                block_end = min(block_start + block_rows, worksheet.rows)
+                visible_start = max(block_start, row_start)
+                visible_end = min(block_end, row_end)
+                if visible_end <= visible_start:
+                    continue
+                center_y = top - ((visible_start - row_start) + (visible_end - row_start)) / 2 * cell
+                canvas.drawRightString(grid_left - 0.15 * cm, center_y - 3, str(block_row_index + 1))
 
             canvas.showPage()
 
