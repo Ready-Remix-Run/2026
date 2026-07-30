@@ -9,7 +9,10 @@ def build_worksheet(
 ) -> Worksheet:
 
     rows = len(cells)
-    cols = len(cells[0]) if rows else 0
+    if rows:
+        cols = len(cells[0])
+    else:
+        cols = 0
 
     return Worksheet(
         title=title,

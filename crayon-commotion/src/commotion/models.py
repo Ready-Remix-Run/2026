@@ -79,4 +79,9 @@ class StudentSheet:
     start_col: int
 
     cells: list[EncodedCell]
-    
+
+#--------Run-length-----------
+@dataclass(frozen=True)
+class Run:
+    count: int
+    color: PaletteColor
