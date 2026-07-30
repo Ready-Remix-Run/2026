@@ -8,8 +8,21 @@ from commotion.models import GridCell, Palette
 
 
 def _second_nearest_palette_color(rgb, palette: Palette, exclude_id: int):
-    candidates = [c for c in palette.colors if c.id != exclude_id]
-    return min(candidates, key=lambda c: color_distance(rgb, (c.r, c.g, c.b)))
+    candidates = []
+    for c in palette.colors:
+        if c.id != exclude_id:
+            candidates.append(c)
+
+    best = candidates[0]
+    best_distance = color_distance(rgb, (best.r, best.g, best.b))
+
+    for c in candidates[1:]:
+        distance = color_distance(rgb, (c.r, c.g, c.b))
+        if distance < best_distance:
+            best = c
+            best_distance = distance
+
+    return best
 
 
 def _interior_starts(length: int, size: int) -> range:
@@ -41,7 +54,10 @@ def count_monochrome_blocks(
     repeated color.
     """
     total_rows = len(grid)
-    total_cols = len(grid[0]) if total_rows else 0
+    if total_rows:
+        total_cols = len(grid[0])
+    else:
+        total_cols = 0
 
     monochrome = 0
     total = 0
@@ -51,11 +67,10 @@ def count_monochrome_blocks(
             block_bottom = min(block_top + block_rows, total_rows)
             block_right = min(block_left + block_cols, total_cols)
 
-            color_ids = {
-                grid[r][c].color.id
-                for r in range(block_top, block_bottom)
-                for c in range(block_left, block_right)
-            }
+            color_ids = set()
+            for r in range(block_top, block_bottom):
+                for c in range(block_left, block_right):
+                    color_ids.add(grid[r][c].color.id)
 
             total += 1
             if len(color_ids) == 1:
@@ -87,24 +102,30 @@ def ensure_block_variety(
     first place, so this shouldn't be run unconditionally.
     """
     total_rows = len(grid)
-    total_cols = len(grid[0]) if total_rows else 0
+    if total_rows:
+        total_cols = len(grid[0])
+    else:
+        total_cols = 0
 
-    result = [row[:] for row in grid]
+    result = []
+    for row in grid:
+        result.append(row[:])
 
     for block_top in range(0, total_rows, block_rows):
         for block_left in range(0, total_cols, block_cols):
             block_bottom = min(block_top + block_rows, total_rows)
             block_right = min(block_left + block_cols, total_cols)
 
-            color_ids = {
-                grid[r][c].color.id
-                for r in range(block_top, block_bottom)
-                for c in range(block_left, block_right)
-            }
+            color_ids = set()
+            for r in range(block_top, block_bottom):
+                for c in range(block_left, block_right):
+                    color_ids.add(grid[r][c].color.id)
             if len(color_ids) != 1:
                 continue
 
-            (main_id,) = color_ids
+            main_id = None
+            for color_id in color_ids:
+                main_id = color_id
             height = block_bottom - block_top
             width = block_right - block_left
             square_rows = min(nudge_size, height)

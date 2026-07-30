@@ -9,7 +9,11 @@ def bits_needed_for_palette(palette: Palette) -> int:
     in binary (2**4 = 16 isn't enough, 2**5 = 32 is), so every color in
     that palette gets encoded using 5 bits.
     """
-    largest_id = max(color.id for color in palette.colors)
+    largest_id = palette.colors[0].id
+    for color in palette.colors[1:]:
+        if color.id > largest_id:
+            largest_id = color.id
+
     return max(1, largest_id.bit_length())
 
 

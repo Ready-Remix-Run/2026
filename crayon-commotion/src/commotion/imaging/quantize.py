@@ -5,7 +5,15 @@ from commotion.models import GridCell, Palette, PaletteColor
 
 def _srgb_channel_to_linear(c: int) -> float:
     c = c / 255
-    return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+    if c <= 0.04045:
+        return c / 12.92
+    return ((c + 0.055) / 1.055) ** 2.4
+
+
+def _lab_f(t: float) -> float:
+    if t > 0.008856:
+        return t ** (1 / 3)
+    return 7.787 * t + 16 / 116
 
 
 def rgb_to_lab(rgb: tuple[int, int, int]) -> tuple[float, float, float]:
@@ -15,18 +23,21 @@ def rgb_to_lab(rgb: tuple[int, int, int]) -> tuple[float, float, float]:
     hues -- e.g. a pale blue and a pale pink -- end up far apart, unlike
     raw RGB distance, which mostly just measures brightness.
     """
-    r, g, b = (_srgb_channel_to_linear(c) for c in rgb)
+    r = _srgb_channel_to_linear(rgb[0])
+    g = _srgb_channel_to_linear(rgb[1])
+    b = _srgb_channel_to_linear(rgb[2])
 
     x = r * 0.4124 + g * 0.3576 + b * 0.1805
     y = r * 0.2126 + g * 0.7152 + b * 0.0722
     z = r * 0.0193 + g * 0.1192 + b * 0.9505
 
-    x, y, z = x / 0.95047, y / 1.0, z / 1.08883
+    x = x / 0.95047
+    y = y / 1.0
+    z = z / 1.08883
 
-    def f(t: float) -> float:
-        return t ** (1 / 3) if t > 0.008856 else 7.787 * t + 16 / 116
-
-    fx, fy, fz = f(x), f(y), f(z)
+    fx = _lab_f(x)
+    fy = _lab_f(y)
+    fz = _lab_f(z)
 
     return (116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz))
 
@@ -83,10 +94,12 @@ def quantize_image(
 
     result = []
 
-    for row_index, row in enumerate(pixels):
+    for row_index in range(len(pixels)):
+        row = pixels[row_index]
         output_row = []
 
-        for col_index, rgb in enumerate(row):
+        for col_index in range(len(row)):
+            rgb = row[col_index]
 
             output_row.append(
                 GridCell(

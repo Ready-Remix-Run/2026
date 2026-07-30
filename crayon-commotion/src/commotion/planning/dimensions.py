@@ -27,6 +27,16 @@ def suggest_dimensions(
             cols = total_cells // rows
             options.append(DimensionOption(rows=rows, cols=cols))
 
-    options.sort(key=lambda opt: abs(opt.rows - opt.cols))
+    # Selection sort: put the most-square option (smallest rows/cols
+    # difference) first, without needing a lambda sort key.
+    for i in range(len(options)):
+        closest_index = i
+        for j in range(i + 1, len(options)):
+            closest_diff = abs(options[closest_index].rows - options[closest_index].cols)
+            current_diff = abs(options[j].rows - options[j].cols)
+            if current_diff < closest_diff:
+                closest_index = j
+        options[i], options[closest_index] = options[closest_index], options[i]
+
     return options[:max_options]
 

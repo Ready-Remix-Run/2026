@@ -51,9 +51,8 @@ def split_into_student_sheets(
 
     total = len(sheets)
 
-    sheets = [
-        replace(sheet, total=total)
-        for sheet in sheets
-    ]
+    final_sheets = []
+    for sheet in sheets:
+        final_sheets.append(replace(sheet, total=total))
 
-    return sheets
+    return final_sheets

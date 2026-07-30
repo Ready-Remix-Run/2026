@@ -25,6 +25,7 @@ def write_csv(
         writer.writerow([])
 
         for row in worksheet.cells:
-            writer.writerow(
-                cell.value for cell in row
-            )
+            row_values = []
+            for cell in row:
+                row_values.append(cell.value)
+            writer.writerow(row_values)
